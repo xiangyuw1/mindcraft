@@ -2,7 +2,10 @@ const settings = {
     "minecraft_version": "1.21.6", // or specific version like "1.21.6"
     "host": "127.0.0.1", // or "localhost", "your.ip.address.here"
     "port": 25565, // set to -1 to automatically scan for open ports
-    "auth": "microsoft", // or "microsoft"
+    "auth": "yggdrasil", // or "microsoft", "yggdrasil", "offline"
+    "yggdrasil_server": "https://littleskin.cn/api/yggdrasil", // only used if auth is "yggdrasil"
+    "yggdrasil_account": "your_email@example.com", // only used if auth is "yggdrasil"
+    "yggdrasil_password": "your_password", // only used if auth is "yggdrasil"
     "server_login_password": "123456", // optional: if set, bot sends /login <password> after joining the server
     "server_login_delay_ms": 8000, // delay before sending /login after protocol enters play state
     "skip_client_settings_packet": false, // workaround for Velocity/HyperZoneLogin config-stage packet handling

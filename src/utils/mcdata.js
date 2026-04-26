@@ -62,6 +62,19 @@ export function initBot(username) {
         version: mc_version,
         checkTimeoutInterval: 60000,  // 60s keep-alive check (default 30s) — reduces disconnects on slow servers
     }
+
+    if (settings.auth === 'yggdrasil') {
+        options.auth = 'mojang';
+        let serverUrl = settings.yggdrasil_server;
+        if (serverUrl.endsWith('/')) {
+            serverUrl = serverUrl.slice(0, -1);
+        }
+        options.authServer = serverUrl + '/authserver';
+        options.sessionServer = serverUrl + '/sessionserver';
+        options.username = settings.yggdrasil_account;
+        options.password = settings.yggdrasil_password;
+        options.profilesFolder = false; // Disable reading Mojang tokens from disk
+    }
     if (!mc_version || mc_version === "auto") {
         delete options.version;
     }
