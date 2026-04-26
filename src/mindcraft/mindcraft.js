@@ -44,17 +44,19 @@ export async function createAgent(settings) {
     let init_message = settings.init_message || null;
 
     try {
-        try {
-            const server = await getServer(settings.host, settings.port, settings.minecraft_version);
-            settings.host = server.host;
-            settings.port = server.port;
-            settings.minecraft_version = server.version;
-        } catch (error) {
-            console.warn(`Error getting server:`, error);
-            if (settings.minecraft_version === "auto") {
+        if (settings.minecraft_version === "auto") {
+            try {
+                const server = await getServer(settings.host, settings.port, settings.minecraft_version);
+                settings.host = server.host;
+                settings.port = server.port;
+                settings.minecraft_version = server.version;
+            } catch (error) {
+                console.warn(`Error getting server:`, error);
                 settings.minecraft_version = null;
+                console.warn(`Attempting to connect anyway...`);
             }
-            console.warn(`Attempting to connect anyway...`);
+        } else {
+            console.log(`Using configured Minecraft version ${settings.minecraft_version} without auto-detection.`);
         }
 
         const agentProcess = new AgentProcess(agent_name, mindserver_port);

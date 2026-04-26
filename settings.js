@@ -1,8 +1,12 @@
 const settings = {
-    "minecraft_version": "auto", // or specific version like "1.21.6"
+    "minecraft_version": "1.21.6", // or specific version like "1.21.6"
     "host": "127.0.0.1", // or "localhost", "your.ip.address.here"
-    "port": 55916, // set to -1 to automatically scan for open ports
-    "auth": "offline", // or "microsoft"
+    "port": 25565, // set to -1 to automatically scan for open ports
+    "auth": "microsoft", // or "microsoft"
+    "server_login_password": "123456", // optional: if set, bot sends /login <password> after joining the server
+    "server_login_delay_ms": 8000, // delay before sending /login after protocol enters play state
+    "skip_client_settings_packet": false, // workaround for Velocity/HyperZoneLogin config-stage packet handling
+    "skip_login_skin_commands": true, // workaround for HyperZoneLogin ProfileSkinSubModule interactions
 
     // the mindserver manages all agents and hosts the UI
     "mindserver_port": 8080,
@@ -37,7 +41,7 @@ const settings = {
     // Works on windows and mac, but linux requires you to install the espeak package through your package manager eg: `apt install espeak` `pacman -S espeak`.
 
     "chat_ingame": true, // bot responses are shown in minecraft chat
-    "language": "en", // translate to/from this language. Supports these language names: https://cloud.google.com/translate/docs/languages
+    "language": "zh-CN", // translate to/from this language. Supports these language names: https://cloud.google.com/translate/docs/languages
     "render_bot_view": false, // show bot's view in browser at localhost:3000, 3001...
 
     "allow_insecure_coding": false, // allows newAction command and model can write/run code on your computer. enable at own risk

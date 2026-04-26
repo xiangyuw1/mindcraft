@@ -25,6 +25,16 @@
         "default": "offline",
         "options": ["offline", "microsoft"]
     },
+    "server_login_password": {
+        "type": "string",
+        "description": "Optional server password used to auto-send /login <password> after joining",
+        "default": ""
+    },
+    "server_login_delay_ms": {
+        "type": "number",
+        "description": "Delay in milliseconds before auto-sending /login after protocol enters play state",
+        "default": 1500
+    },
     "base_profile": {
         "type": "string",
         "description": "Allowed values: survival, assistant, creative, god_mode. Each has fine tuned settings for different game modes.",

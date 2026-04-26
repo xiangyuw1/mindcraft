@@ -8,7 +8,7 @@ import { plugin as collectblock } from 'mineflayer-collectblock';
 import { plugin as autoEat } from 'mineflayer-auto-eat';
 import plugin from 'mineflayer-armor-manager';
 const armorManager = plugin;
-let mc_version = settings.minecraft_version;
+let mc_version = null;
 let mcdata = null;
 let Item = null;
 
@@ -53,6 +53,7 @@ export const WOOL_COLORS = [
 
 
 export function initBot(username) {
+    mc_version = settings.minecraft_version;
     const options = {
         username: username,
         host: settings.host,
@@ -67,6 +68,22 @@ export function initBot(username) {
 
     const bot = createBot(options);
 
+    let pendingClientSettings = null;
+    let clientSettingsFlushTimer = null;
+
+    const flushClientSettings = () => {
+        if (!pendingClientSettings) return;
+        if (bot._client.state !== 'play') return;
+        console.log('[mcdata] sending deferred client settings packet');
+        const packet = pendingClientSettings;
+        pendingClientSettings = null;
+        if (clientSettingsFlushTimer) {
+            clearTimeout(clientSettingsFlushTimer);
+            clientSettingsFlushTimer = null;
+        }
+        originalWrite('settings', packet);
+    };
+
     // Throttle position packets to avoid kicks on Paper/Spigot servers
     // Paper enforces stricter packet rate limits than vanilla, causing ECONNRESET
     // when mineflayer sends position updates faster than 50ms apart
@@ -75,13 +92,24 @@ export function initBot(username) {
     const POSITION_THROTTLE_MS = 50;
     const originalWrite = bot._client.write.bind(bot._client);
     bot._client.write = function(name, data) {
+        if (name === 'settings') {
+            if (settings.skip_client_settings_packet !== false) {
+                console.log('[mcdata] skipping client settings packet due to compatibility workaround');
+                return;
+            }
+        }
+
         if (name === 'position' || name === 'position_look' || name === 'look') {
+            if (bot._client.state !== 'play') {
+                return; // BLOCK movement packets when not in PLAY state
+            }
             const now = Date.now();
             if (now - lastPositionUpdate < POSITION_THROTTLE_MS) {
                 // Queue this packet so the last position update is never lost
                 if (!pendingPositionPacket) {
                     pendingPositionPacket = setTimeout(() => {
                         pendingPositionPacket = null;
+                        if (bot._client.state !== 'play') return;
                         lastPositionUpdate = Date.now();
                         originalWrite(name, data);
                     }, POSITION_THROTTLE_MS - (now - lastPositionUpdate));
@@ -96,6 +124,10 @@ export function initBot(username) {
         }
         return originalWrite(name, data);
     };
+
+    bot.once('spawn', () => {
+        flushClientSettings();
+    });
 
     // Suppress PartialReadError for non-critical packets
     // Paper servers sometimes send packets that node-minecraft-protocol

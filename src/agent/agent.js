@@ -93,12 +93,53 @@ export class Agent {
         this.bot.on('login', () => {
             console.log(this.name, 'logged in!');
             serverProxy.login();
+
+            if (settings.server_login_password) {
+                const loginDelay = Number(settings.server_login_delay_ms ?? 1500);
+                const safeDelay = Number.isFinite(loginDelay) && loginDelay >= 0 ? loginDelay : 1500;
+                const pollMs = 250;
+                const maxWaitMs = Math.max(5000, Number(settings.spawn_timeout ?? 30) * 1000);
+                let waitedMs = 0;
+
+                const autoLoginPoll = setInterval(() => {
+                    if (this._disconnectHandled || !this.bot?._client) {
+                        clearInterval(autoLoginPoll);
+                        return;
+                    }
+
+                    if (this.bot._client.state === 'play') {
+                        clearInterval(autoLoginPoll);
+                        setTimeout(() => {
+                            if (this._disconnectHandled || this.bot?._client?.state !== 'play') return;
+                            console.log(`${this.name} sending auto /login command.`);
+                            this.bot._client.write('chat_command_signed', {
+                                command: `login ${settings.server_login_password}`,
+                                timestamp: BigInt(Date.now()),
+                                salt: 1n,
+                                argumentSignatures: [],
+                                messageCount: 0,
+                                acknowledged: Buffer.from([0, 0, 0]),
+                                checksum: 0
+                            });
+                        }, safeDelay);
+                        return;
+                    }
+
+                    waitedMs += pollMs;
+                    if (waitedMs >= maxWaitMs) {
+                        clearInterval(autoLoginPoll);
+                        console.warn(`${this.name} auto-login skipped: connection never reached play state.`);
+                    }
+                }, pollMs);
+            }
             
-            // Set skin for profile, requires Fabric Tailor. (https://modrinth.com/mod/fabrictailor)
-            if (this.prompter.profile.skin)
-                this.bot.chat(`/skin set URL ${this.prompter.profile.skin.model} ${this.prompter.profile.skin.path}`);
-            else
-                this.bot.chat(`/skin clear`);
+            if (!settings.skip_login_skin_commands) {
+                // Set skin for profile, requires Fabric Tailor. (https://modrinth.com/mod/fabrictailor)
+                if (this.prompter.profile.skin)
+                    this.bot.chat(`/skin set URL ${this.prompter.profile.skin.model} ${this.prompter.profile.skin.path}`);
+                else
+                    this.bot.chat(`/skin clear`);
+            }
         });
 		const spawnTimeoutDuration = settings.spawn_timeout;
         const spawnTimeout = setTimeout(() => {
