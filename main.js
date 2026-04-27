@@ -70,6 +70,11 @@ if (process.env.SETTINGS_JSON) {
     }
 }
 
+// 拦截处理：如果不是离线模式，则清空密码，阻止自动发送 /login 验证
+if (settings.auth !== 'offline') {
+    settings.server_login_password = "";
+}
+
 
 Mindcraft.init(false, settings.mindserver_port, settings.auto_open_ui);
 
